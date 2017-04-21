@@ -27,11 +27,11 @@ class Doctor(actorSystem: ActorSystem, connectionParams: ConnectionParams, id: S
   val subscriptionRefs: List[SubscriptionRef] = Subscription.run(control) {
     import Directives._
     channel(qos = 1) {
-      consume(topic(queue(DoctorQueue), topics = List(id).map(idToTopic), exchange = exchangeDefault)) {
+      consume(topic(queue(id, durable = false, autoDelete = true), topics = List(id).map(idToTopic), exchange = exchangeDefault)) {
         body(as[Response]) {
-          case Response(Task(taskType, _, name), healthy) =>
+          case Response(Task(taskType, rid, name), healthy) =>
             ack(Future {
-              println(s"$id: Is $name $taskType healthy? $healthy")
+              println(s"[$id]: Is $name $taskType healthy? $healthy")
             })
         }
       }
